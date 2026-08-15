@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room — CubeDuel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="room-body">
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <header class="rbar">
+    <div class="brand small">
+      <span class="cubemark" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
+      Cube<strong>Duel</strong>
+    </div>
+    <div class="room-chip">
+      ROOM <b id="roomCode">——————</b>
+      <button class="icon-btn" id="btnCopyCode" title="Copy room code">⧉</button>
+    </div>
+    <span class="cube-badge" id="cubeBadge">3×3×3</span>
+    <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">waiting for opponent…</span></span>
+    <div class="grow"></div>
+    <button class="btn ghost tiny" id="btnLeave">Leave Room</button>
+  </header>
+        <div class="trow">
+          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
+          <div class="grow"></div>
+          <button class="btn ghost tiny" id="btnReset">Reset</button>
+          <button class="btn primary" id="btnStartStop">Start / Stop</button>
+        </div>
+
+        <div class="manual-row">
+          <input id="manualTime" type="text" inputmode="decimal" placeholder="Manual: 1537 = 15.37" autocomplete="off">
+          <button class="btn ghost tiny" id="btnManualSave">Save</button>
+        </div>
+  <!-- loading -->
+  <div class="overlay" id="loading">
+    <div class="cube-spin" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p>Entering room…</p>
+  </div>
+
+  <!-- fatal error -->
+  <div class="overlay hidden" id="errOv">
+    <div class="panel err-panel">
+      <h3>Can’t enter this room</h3>
+      <p id="errMsg"></p>
+      <div class="btnrow">
+        <button class="btn primary" onclick="location.reload()">Retry</button>
+        <button class="btn ghost" id="errHome">Back to lobby</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="rmain">
+    <!-- scramble + timer -->
+    <section class="grid-top">
+      <div class="panel scramble-panel">
+        <div class="panel-head">
+          <span class="round-badge" id="roundBadge">SOLVE 1 / ∞</span>
+          <div class="grow"></div>
+          <button class="btn ghost tiny" id="btnCopyScr">Copy scramble</button>
+        </div>
+        <div class="scramble" id="scrambleText">—</div>
+        <div class="scr-foot" id="lastLine">Last solve: —</div>
+      </div>
+
+      <div class="panel timer-panel" id="timerDeck" data-state="idle">
+        <div class="pill" id="timerPill">IDLE</div>
+        <div class="digits" id="timerDigits">0.00</div>
+        <div class="solve-stamp" id="solveStamp"></div>
+        <div class="thint">Hold <kbd>SPACE</kbd> → release to start · press again to stop · <kbd>ESC</kbd> reset</div>
+        <div class="trow">
+            <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
+            <div class="grow"></div>
+            <button class="btn ghost tiny" id="btnReset">Reset</button>
+            <button class="btn primary" id="btnStartStop">Start / Stop</button>
+          </div>
+  
+          <div class="manual-row">
+            <input id="manualTime" type="text" inputmode="decimal" placeholder="Manual: 1537 = 15.37" autocomplete="off">
+            <button class="btn ghost tiny" id="btnManualSave">Save</button>
+          </div>
+      </div>
+    </section>
+
+    <!-- battle log -->
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <span class="ph-title">Battle log</span>
+        <span class="muted" id="solveCount">0 solves</span>
+        <div class="grow"></div>
+        <button class="btn ghost tiny" id="btnCsv">Export CSV</button>
+      </div>
+      <div class="tscroll">
+        <table class="battle">
+          <thead>
+            <tr>
+              <th class="c-n">#</th>
+              <th class="c-p p1"><span id="p1name">Player 1</span><small id="p1best"></small></th>
+              <th class="c-p p2"><span id="p2name">Player 2</span><small id="p2best"></small></th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-note" id="emptyNote">No solves yet — start the timer and set the first time of this duel.</div>
+    </section>
+
+    <!-- stats -->
+    <section class="grid-stats">
+      <div class="panel stat-card sc-p1">
+        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">Player 1</b><span class="dot on" id="p1dot" title="you"></span></div>
+        <div class="sc-body" id="p1stats"></div>
+      </div>
+      <div class="panel stat-card sc-p2">
+        <div class="sc-head"><span class="sc-dot p2"></span><b id="p2name2">Player 2</b><span class="dot off" id="p2dot"></span></div>
+        <div class="sc-body" id="p2stats"></div>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head">
+          <span class="ph-title">Ao5 progression</span>
+          <div class="grow"></div>
+          <span class="legend"><i class="lg p1"></i><span id="lg1">Player 1</span><i class="lg p2"></i><span id="lg2">Player 2</span></span>
+        </div>
+        <canvas id="chart" height="220"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <!-- solve details modal -->
+  <div class="modal-overlay hidden" id="modalOv">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="m-head"><b id="mTitle">Solve #1</b><button class="icon-btn" id="mClose">✕</button></div>
+      <div class="m-hero"><span class="m-time" id="mTime">—</span><span class="status-chip" id="mStatus">Normal</span></div>
+      <dl class="m-grid">
+        <div><dt>Raw time</dt><dd id="mRaw">—</dd></div>
+        <div><dt>Final time</dt><dd id="mFinal">—</dd></div>
+        <div><dt>Player</dt><dd id="mPlayer">—</dd></div>
+        <div><dt>Cube</dt><dd id="mCube">—</dd></div>
+        <div><dt>Date</dt><dd id="mDate">—</dd></div>
+        <div><dt>Exact time</dt><dd id="mClock">—</dd></div>
+      </dl>
+      <div class="m-vs" id="mVs"></div>
+      <div class="m-scramble"><label>Scramble</label><code id="mScramble"></code></div>
+      <div class="m-actions hidden" id="mActions">
+        <div class="seg penalty-seg">
+          <button data-p="none">Normal</button>
+          <button data-p="+2">+2</button>
+          <button data-p="dnf">DNF</button>
+        </div>
+        <button class="btn danger" id="mDelete">Delete solve</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/room.js"></script>
+</body>
+</html>

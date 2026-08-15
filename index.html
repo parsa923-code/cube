@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CubeDuel — 1v1 Speedcubing Battles</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="lobby-body">
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+  <header class="top">
+    <div class="brand">
+      <span class="cubemark" aria-hidden="true">
+        <i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i>
+      </span>
+      Cube<strong>Duel</strong>
+    </div>
+    <span class="tag">1v1 · same scramble · realtime</span>
+  </header>
+
+  <main class="lobby">
+    <section class="pitch">
+      <h1 class="display">
+        Race a friend.<br>
+        <span class="outline">Same scramble.</span><br>
+        Zero mercy.
+      </h1>
+      <p class="lede">
+        Create a room, share a 6-character code and trade unlimited solves head-to-head —
+        live results, Ao5 / Ao12 / Ao50 / Ao100, +2 &amp; DNF handling, and WCA-style
+        scrambles for 3×3 and 2×2.
+      </p>
+      <div class="steps">
+        <div class="step"><b>01</b><span>Create a room &amp; copy the code</span></div>
+        <div class="step"><b>02</b><span>Your opponent joins from anywhere</span></div>
+        <div class="step"><b>03</b><span>Solve the same scramble — results sync live</span></div>
+      </div>
+    </section>
+
+    <section class="panel entry">
+      <div class="livechip">
+        <span class="dot on"></span>
+        <span class="lc-label">LIVE TIMER</span>
+        <span class="lc-time" id="demoTime">0.00</span>
+      </div>
+
+      <label class="field">Your name
+        <input id="inpName" maxlength="20" placeholder="e.g. Feliks" autocomplete="nickname">
+      </label>
+
+      <label class="field">Room code
+        <input id="inpCode" maxlength="8" placeholder="ABC123" autocomplete="off" spellcheck="false">
+      </label>
+
+      <div class="field">Cube type <small>(used when creating a room)</small>
+        <div class="seg cube-seg">
+          <label><input type="radio" name="cube" value="333" checked><span>3×3×3</span></label>
+          <label><input type="radio" name="cube" value="222"><span>2×2×2</span></label>
+        </div>
+      </div>
+
+      <button id="btnCreate" class="btn primary big">Create Room</button>
+      <button id="btnJoin" class="btn ghost big">Join Room</button>
+
+      <p class="err" id="errBox" role="alert"></p>
+      <p class="hint">Your name is saved in this browser. No signup — jump straight into the duel.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Static frontend · Supabase Realtime · WCA-style scrambles · works with thousands of solves
+  </footer>
+
+  <div id="toasts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -15,6 +15,7 @@
     playerSolvedThisRound: false
   };
 
+  const pendingScrambles = new Set();
   let timer = null, dbChannel = null, presChannel = null;
 
   boot();
@@ -54,7 +55,13 @@
       setupRealtime();
       initChat();
 
-      if (state.round === 0) await nextScramble();
+      if (state.round === 0) await createNextScramble(1);
+      maybeAdvanceRound(state.round);
+
+      const alreadySolved = [...state.solves.values()]
+        .some(s => s.player_id === SB.uid() && s.solve_number === state.round);
+      state.playerSolvedThisRound = alreadySolved;
+
       $('#loading').classList.add('hidden');
     } catch (e) {
       $('#loading').classList.add('hidden');
@@ -70,7 +77,6 @@
   }
   $('#errHome').addEventListener('click', () => goHome());
 
-  // ---------- Chat ----------
   function initChat() {
     const opp = state.players.find(p => p.id !== SB.uid());
     Chat.init({
@@ -87,7 +93,8 @@
     dbChannel = SB.client.channel('cd-db-' + rid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'solves', filter: 'room_id=eq.' + rid }, p => {
         if (p.eventType === 'DELETE') applyDelete(p.old);
-        else applySolve(p.new);
+        else if (p.eventType === 'UPDATE') applySolveUpdate(p.new);
+        else applySolve(p.new, true);
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scrambles', filter: 'room_id=eq.' + rid }, p => {
         applyScramble(p.new);
@@ -98,6 +105,12 @@
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'rooms', filter: 'id=eq.' + rid }, () => {
         toast('Room closed.', 'err');
         setTimeout(() => goHome(), 1500);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, p => {
+        Chat.onRealtimeInsert(p.new);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, p => {
+        Chat.onRealtimeDelete(p.old);
       })
       .subscribe();
 
@@ -143,7 +156,7 @@
     if (oppDot) oppDot.className = 'dot ' + (on ? 'on' : 'off');
   }
 
-  // ---------- Scrambles ----------
+  // ---------- Scrambles / Auto Round ----------
   function applyScramble(row) {
     if (!row || state.scrambles.has(row.solve_number)) return;
     state.scrambles.set(row.solve_number, row);
@@ -155,13 +168,26 @@
     }
   }
 
-  async function nextScramble() {
+  function maybeAdvanceRound(roundNumber) {
+    const cell = state.byRound.get(roundNumber);
+    if (!cell || !cell[1] || !cell[2]) return;
+    const nextN = roundNumber + 1;
+    if (state.scrambles.has(nextN)) return;
+    createNextScramble(nextN);
+  }
+
+  async function createNextScramble(n) {
+    if (state.scrambles.has(n) || pendingScrambles.has(n)) return;
+    pendingScrambles.add(n);
     try {
-      const n = state.round + 1;
       const sc = ScrambleGen.generate(state.room.cube_type);
       const row = await API.addScramble(state.room.id, n, sc, state.room.cube_type);
       applyScramble(row);
-    } catch (e) { toast('Next scramble failed: ' + e.message, 'err'); }
+    } catch (e) {
+      toast('Round advance failed: ' + e.message, 'err');
+    } finally {
+      pendingScrambles.delete(n);
+    }
   }
 
   function renderScramble() {
@@ -187,8 +213,9 @@
   async function saveSolve({ rawMs, forced }) {
     if (state.locked) return;
     state.locked = true;
+    const n = state.activeRound || state.round;
+    let optimisticRow = null;
     try {
-      const n = state.activeRound || state.round;
       if (!n) throw new Error('No scramble yet.');
       const scrRow = state.scrambles.get(n);
       const penalty = forced || 'none';
@@ -199,16 +226,27 @@
         scramble: scrRow ? scrRow.scramble : '', cube_type: state.room.cube_type,
         created_at: new Date().toISOString()
       };
-      applySolve(row);
+      optimisticRow = row;
+      applySolve(row, false);
       await API.insertSolve(row);
       state.playerSolvedThisRound = true;
+      maybeAdvanceRound(n);
       toast(`Saved #${n}: ${row.penalty === 'dnf' ? 'DNF' : fmtMs(row.final_time)}`, 'ok');
     } catch (e) {
+      if (optimisticRow) rollbackSolve(optimisticRow);
       toast(e.message, 'err');
     } finally {
       state.locked = false;
       $('#solveStamp').textContent = 'Round #' + state.round;
     }
+  }
+
+  function rollbackSolve(row) {
+    state.solves.delete(row.id);
+    const cell = state.byRound.get(row.solve_number);
+    if (cell) cell[seatOf(row.player_id)] = null;
+    upsertRow(row.solve_number);
+    renderStats();
   }
 
   // ---------- Solves ----------
@@ -223,7 +261,8 @@
     cell[seatOf(row.player_id)] = row;
   }
 
-  function applySolve(row) {
+  function applySolve(row, confirmed) {
+    if (state.solves.has(row.id)) return false;
     state.solves.set(row.id, row);
     indexSolve(row);
     ensureRoundInList(row.solve_number);
@@ -231,6 +270,17 @@
     renderStats();
     updateLastLine(row);
     $('#emptyNote').classList.add('hidden');
+    if (state.modalOpen && state.modalId === row.id) fillModal(row);
+    if (confirmed) maybeAdvanceRound(row.solve_number);
+    return true;
+  }
+
+  function applySolveUpdate(row) {
+    state.solves.set(row.id, row);
+    indexSolve(row);
+    upsertRow(row.solve_number);
+    renderStats();
+    updateLastLine(row);
     if (state.modalOpen && state.modalId === row.id) fillModal(row);
   }
 
@@ -434,7 +484,7 @@
       if (!row) return;
       const p = b.dataset.p;
       const fin = API.computeFinal(row.raw_time, p);
-      applySolve({ ...row, penalty: p, final_time: fin });
+      applySolveUpdate({ ...row, penalty: p, final_time: fin });
       try { await API.updateSolvePenalty(row.id, p, fin); }
       catch (e) { toast('Update failed: ' + e.message, 'err'); }
     });
@@ -464,7 +514,6 @@
 
   // ---------- Actions ----------
   function setupActions() {
-    $('#btnNext').addEventListener('click', nextScramble);
     $('#btnCopyCode').addEventListener('click', async () =>
       toast((await copyText(state.sess.code)) ? 'Code copied!' : 'Copy failed', 'ok'));
     $('#btnCopyScr').addEventListener('click', async () => {
@@ -490,12 +539,11 @@
   async function leaveRoom() {
     if (!confirm('Leave this room?')) return;
     try {
-      await API.removePlayer(state.room.id);
-      if (state.room.created_by === SB.uid()) {
-        const left = await API.getPlayers(state.room.id);
-        if (left.length === 0) await API.deleteRoom(state.room.id).catch(() => {});
-      }
-    } catch (e) { toast(e.message, 'err'); }
+      await API.leaveRoomCleanup(state.room.id);
+    } catch (e) {
+      try { await API.removePlayer(state.room.id); }
+      catch (e2) { toast(e2.message, 'err'); }
+    }
     if (dbChannel) SB.client.removeChannel(dbChannel);
     if (presChannel) SB.client.removeChannel(presChannel);
     goHome('You left the room.');

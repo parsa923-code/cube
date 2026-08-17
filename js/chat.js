@@ -2,12 +2,8 @@
   const MAX_LEN = 500;
   const HISTORY_LIMIT = 50;
 
-  let roomId = null;
-  let myId = null;
-  let myName = '';
-  let oppName = 'Opponent';
-  let lastRenderedId = null;
-
+  let roomId = null, myId = null, myName = '', oppName = 'Opponent';
+  const renderedIds = new Set();
   const els = {};
 
   function init(opts) {
@@ -15,81 +11,55 @@
     myId = opts.myId;
     myName = opts.myName;
     oppName = opts.oppName || 'Opponent';
-
     els.scroll = document.getElementById('chatScroll');
     els.input = document.getElementById('chatInput');
     els.send = document.getElementById('chatSend');
     els.status = document.getElementById('chatStatus');
-
     els.send.addEventListener('click', sendMessage);
     els.input.addEventListener('keydown', onKey);
-
     loadHistory();
-    subscribe();
   }
 
-  function setOpponentName(name) {
-    oppName = name || 'Opponent';
-  }
+  function setOpponentName(name) { oppName = name || 'Opponent'; }
 
   async function loadHistory() {
     try {
-      const { data, error } = await SB.client
-        .from('messages')
-        .select('*')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: false })
-        .limit(HISTORY_LIMIT);
+      const { data, error } = await SB.client.from('messages')
+        .select('*').eq('room_id', roomId)
+        .order('created_at', { ascending: false }).limit(HISTORY_LIMIT);
       if (error) throw error;
       const msgs = (data || []).reverse();
-      for (const m of msgs) appendMessage(m, false);
+      for (const m of msgs) appendMessage(m);
       scrollToBottom(true);
-      setStatus('');
     } catch (e) {
       setStatus('Failed to load chat history');
     }
   }
 
-  function subscribe() {
-    SB.client
-      .channel('chat-' + roomId)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: 'room_id=eq.' + roomId
-      }, payload => {
-        if (payload.new.id === lastRenderedId) return;
-        appendMessage(payload.new, true);
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'messages',
-        filter: 'room_id=eq.' + roomId
-      }, payload => {
-        const el = document.getElementById('msg-' + payload.old.id);
-        if (el) el.remove();
-      })
-      .subscribe();
+  function onRealtimeInsert(msg) {
+    if (renderedIds.has(msg.id)) return;
+    const wasNear = isNearBottom();
+    appendMessage(msg);
+    scrollToBottom(wasNear || msg.player_id === myId);
+  }
+
+  function onRealtimeDelete(msg) {
+    renderedIds.delete(msg.id);
+    removeMessageEl(msg.id);
   }
 
   function isNearBottom() {
-    const threshold = 80;
-    return els.scroll.scrollHeight - els.scroll.scrollTop - els.scroll.clientHeight < threshold;
+    return els.scroll.scrollHeight - els.scroll.scrollTop - els.scroll.clientHeight < 80;
   }
 
   function scrollToBottom(force) {
-    if (force || isNearBottom()) {
-      els.scroll.scrollTop = els.scroll.scrollHeight;
-    }
+    if (force) els.scroll.scrollTop = els.scroll.scrollHeight;
   }
 
-  function appendMessage(msg, autoScroll) {
-    lastRenderedId = msg.id;
+  function appendMessage(msg) {
+    if (renderedIds.has(msg.id)) return;
+    renderedIds.add(msg.id);
     const own = msg.player_id === myId;
-    const wasNear = isNearBottom();
-
     const wrap = document.createElement('div');
     wrap.className = 'chat-msg ' + (own ? 'own' : 'other');
     wrap.id = 'msg-' + msg.id;
@@ -122,7 +92,6 @@
     }
 
     els.scroll.appendChild(wrap);
-    if (autoScroll) scrollToBottom(wasNear || own);
   }
 
   function onKey(e) {
@@ -139,26 +108,23 @@
       setStatus('Message too long (max ' + MAX_LEN + ')');
       return;
     }
-
-    els.send.disabled = true;
-    els.input.disabled = true;
+    els.input.value = '';
+    const id = uuid();
+    const msg = { id, room_id: roomId, player_id: myId, message: raw, created_at: new Date().toISOString() };
+    appendMessage(msg);
+    scrollToBottom(true);
     setStatus('Sending…');
-
     try {
-      const { error } = await SB.client.from('messages').insert({
-        id: uuid(),
-        room_id: roomId,
-        player_id: myId,
-        message: raw
-      });
+      const { error } = await SB.client.from('messages')
+        .insert({ id, room_id: roomId, player_id: myId, message: raw });
       if (error) throw error;
-      els.input.value = '';
       setStatus('');
     } catch (e) {
+      renderedIds.delete(id);
+      removeMessageEl(id);
+      els.input.value = raw;
       setStatus('Send failed: ' + e.message);
     } finally {
-      els.send.disabled = false;
-      els.input.disabled = false;
       els.input.focus();
     }
   }
@@ -168,14 +134,21 @@
     try {
       const { error } = await SB.client.from('messages').delete().eq('id', id);
       if (error) throw error;
+      renderedIds.delete(id);
+      removeMessageEl(id);
     } catch (e) {
       setStatus('Delete failed: ' + e.message);
     }
+  }
+
+  function removeMessageEl(id) {
+    const el = document.getElementById('msg-' + id);
+    if (el) el.remove();
   }
 
   function setStatus(txt) {
     if (els.status) els.status.textContent = txt;
   }
 
-  window.Chat = { init, setOpponentName };
+  window.Chat = { init, setOpponentName, onRealtimeInsert, onRealtimeDelete };
 })();

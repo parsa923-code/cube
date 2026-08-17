@@ -90,7 +90,7 @@ window.CubeTimer = class CubeTimer {
     clearTimeout(this._holdT);
     this._holdT = setTimeout(() => {
       if (this.state === 'hold') this._setState('ready');
-    }, 1000);
+    }, 500);
   }
 
   _go() {
@@ -139,7 +139,7 @@ window.CubeTimer = class CubeTimer {
         this._raf = requestAnimationFrame(step);
       } else if (this.state === 'inspection') {
         this._insp = performance.now() - this._i0;
-        this.digits.textContent = (this._insp / 1000).toFixed(2);
+        this.digits.textContent = String(Math.floor(this._insp / 1000));
         if (this._insp >= 17000) { this._finish(0, 'dnf'); return; }
         if (this._insp >= 15000 && this.pill.textContent !== 'INSPECTION +2')
           this.pill.textContent = 'INSPECTION +2';

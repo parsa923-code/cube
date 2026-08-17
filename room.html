@@ -23,31 +23,19 @@
       <button class="icon-btn" id="btnCopyCode" title="Copy room code">⧉</button>
     </div>
     <span class="cube-badge" id="cubeBadge">3×3×3</span>
-    <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">waiting for opponent…</span></span>
+    <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">waiting…</span></span>
     <div class="grow"></div>
     <button class="btn ghost tiny" id="btnLeave">Leave Room</button>
   </header>
-        <div class="trow">
-          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
-          <div class="grow"></div>
-          <button class="btn ghost tiny" id="btnReset">Reset</button>
-          <button class="btn primary" id="btnStartStop">Start / Stop</button>
-        </div>
 
-        <div class="manual-row">
-          <input id="manualTime" type="text" inputmode="decimal" placeholder="Manual: 1537 = 15.37" autocomplete="off">
-          <button class="btn ghost tiny" id="btnManualSave">Save</button>
-        </div>
-  <!-- loading -->
   <div class="overlay" id="loading">
     <div class="cube-spin" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <p>Entering room…</p>
   </div>
 
-  <!-- fatal error -->
   <div class="overlay hidden" id="errOv">
     <div class="panel err-panel">
-      <h3>Can’t enter this room</h3>
+      <h3>Can't enter this room</h3>
       <p id="errMsg"></p>
       <div class="btnrow">
         <button class="btn primary" onclick="location.reload()">Retry</button>
@@ -57,38 +45,29 @@
   </div>
 
   <main class="rmain">
-    <!-- scramble + timer -->
     <section class="grid-top">
       <div class="panel scramble-panel">
         <div class="panel-head">
           <span class="round-badge" id="roundBadge">SOLVE 1 / ∞</span>
           <div class="grow"></div>
           <button class="btn ghost tiny" id="btnCopyScr">Copy scramble</button>
+          <button class="btn primary tiny" id="btnNext">Next ▸</button>
         </div>
         <div class="scramble" id="scrambleText">—</div>
-        <div class="scr-foot" id="lastLine">Last solve: —</div>
+        <div class="scr-foot" id="lastLine">Last: —</div>
       </div>
 
       <div class="panel timer-panel" id="timerDeck" data-state="idle">
         <div class="pill" id="timerPill">IDLE</div>
         <div class="digits" id="timerDigits">0.00</div>
         <div class="solve-stamp" id="solveStamp"></div>
-        <div class="thint">Hold <kbd>SPACE</kbd> → release to start · press again to stop · <kbd>ESC</kbd> reset</div>
+        <div class="thint">Hold <kbd>SPACE</kbd> 1s → release to start · press to stop · <kbd>ESC</kbd> reset</div>
         <div class="trow">
-            <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
-            <div class="grow"></div>
-            <button class="btn ghost tiny" id="btnReset">Reset</button>
-            <button class="btn primary" id="btnStartStop">Start / Stop</button>
-          </div>
-  
-          <div class="manual-row">
-            <input id="manualTime" type="text" inputmode="decimal" placeholder="Manual: 1537 = 15.37" autocomplete="off">
-            <button class="btn ghost tiny" id="btnManualSave">Save</button>
-          </div>
+          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
+        </div>
       </div>
     </section>
 
-    <!-- battle log -->
     <section class="panel table-panel">
       <div class="panel-head">
         <span class="ph-title">Battle log</span>
@@ -108,13 +87,12 @@
           <tbody id="rowsBody"></tbody>
         </table>
       </div>
-      <div class="empty-note" id="emptyNote">No solves yet — start the timer and set the first time of this duel.</div>
+      <div class="empty-note" id="emptyNote">No solves yet — start the timer!</div>
     </section>
 
-    <!-- stats -->
     <section class="grid-stats">
       <div class="panel stat-card sc-p1">
-        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">Player 1</b><span class="dot on" id="p1dot" title="you"></span></div>
+        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">Player 1</b><span class="dot on" id="p1dot"></span></div>
         <div class="sc-body" id="p1stats"></div>
       </div>
       <div class="panel stat-card sc-p2">
@@ -125,14 +103,28 @@
         <div class="panel-head">
           <span class="ph-title">Ao5 progression</span>
           <div class="grow"></div>
-          <span class="legend"><i class="lg p1"></i><span id="lg1">Player 1</span><i class="lg p2"></i><span id="lg2">Player 2</span></span>
+          <span class="legend"><i class="lg p1"></i><span id="lg1">P1</span><i class="lg p2"></i><span id="lg2">P2</span></span>
         </div>
         <canvas id="chart" height="220"></canvas>
       </div>
     </section>
+
+    <!-- CHAT -->
+    <section class="panel chat-panel">
+      <div class="panel-head">
+        <span class="ph-title">Room Chat</span>
+        <div class="grow"></div>
+        <span class="chat-status" id="chatStatus"></span>
+      </div>
+      <div class="chat-scroll" id="chatScroll"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Type a message… (Enter to send)" maxlength="500" rows="1"></textarea>
+        <button class="btn primary" id="chatSend">Send</button>
+      </div>
+    </section>
   </main>
 
-  <!-- solve details modal -->
+  <!-- Modal -->
   <div class="modal-overlay hidden" id="modalOv">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="m-head"><b id="mTitle">Solve #1</b><button class="icon-btn" id="mClose">✕</button></div>
@@ -169,6 +161,7 @@
   <script src="js/api.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/timer.js"></script>
+  <script src="js/chat.js"></script>
   <script src="js/room.js"></script>
 </body>
 </html>

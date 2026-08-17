@@ -51,7 +51,6 @@
           <span class="round-badge" id="roundBadge">SOLVE 1 / ∞</span>
           <div class="grow"></div>
           <button class="btn ghost tiny" id="btnCopyScr">Copy scramble</button>
-          <button class="btn primary tiny" id="btnNext">Next ▸</button>
         </div>
         <div class="scramble" id="scrambleText">—</div>
         <div class="scr-foot" id="lastLine">Last: —</div>
@@ -61,7 +60,7 @@
         <div class="pill" id="timerPill">IDLE</div>
         <div class="digits" id="timerDigits">0.00</div>
         <div class="solve-stamp" id="solveStamp"></div>
-        <div class="thint">Hold <kbd>SPACE</kbd> 1s → release to start · press to stop · <kbd>ESC</kbd> reset</div>
+        <div class="thint">Hold <kbd>SPACE</kbd> 0.5s → release to start · press to stop · <kbd>ESC</kbd> reset</div>
         <div class="trow">
           <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
         </div>
@@ -109,7 +108,6 @@
       </div>
     </section>
 
-    <!-- CHAT -->
     <section class="panel chat-panel">
       <div class="panel-head">
         <span class="ph-title">Room Chat</span>
@@ -124,7 +122,6 @@
     </section>
   </main>
 
-  <!-- Modal -->
   <div class="modal-overlay hidden" id="modalOv">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="m-head"><b id="mTitle">Solve #1</b><button class="icon-btn" id="mClose">✕</button></div>

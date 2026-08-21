@@ -73,3 +73,30 @@
 
       Object.assign(window, { fmtMs, fmtSigned, fmtDate, fmtClock, uuid, copyText, toast, downloadCSV, parseManualTime });
   })();
+
+(function () {
+  function fmtMs(ms) {
+    if (ms == null || !isFinite(ms)) return 'DNF';
+    const cs = Math.floor(ms / 10) % 100;
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const ss = String(s % 60).padStart(2, '0');
+    return (m > 0 ? m + ':' + ss : String(s)) + '.' + String(cs).padStart(2, '0');
+  }
+  function fmtDate(iso) { return new Date(iso).toLocaleDateString('fa-IR'); }
+  function fmtClock(iso) { return new Date(iso).toLocaleTimeString('fa-IR'); }
+  function uuid() { return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); }
+  
+  function toast(msg, type) {
+    const wrap = document.getElementById('toasts');
+    if (!wrap) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + (type || 'info');
+    el.textContent = msg;
+    wrap.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 350); }, 3500);
+  }
+  window.fmtMs = fmtMs; window.fmtDate = fmtDate; window.fmtClock = fmtClock; window.uuid = uuid; window.toast = toast;
+  window.$ = s => document.querySelector(s);
+})();

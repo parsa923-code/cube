@@ -218,4 +218,74 @@ window.CubeTimer = class CubeTimer {
     };
     this._raf = requestAnimationFrame(step);
   }
+  window.CubeTimer = class CubeTimer {
+  constructor(o) {
+    this.digits = o.digits; this.pill = o.pill; this.deck = o.deck;
+    this.onStart = o.onStart || (() => {}); this.onFinish = o.onFinish || (() => {});
+    this.isLocked = o.isLocked || (() => false); this.inspection = false;
+    this.state = 'idle'; this._t0 = 0; this._i0 = 0; this._insp = 0; this._holdT = null; this._raf = 0; this._pendingForced = null;
+    document.addEventListener('keydown', e => this._keyDown(e));
+    document.addEventListener('keyup', e => this._keyUp(e));
+    this.deck.addEventListener('touchstart', e => { e.preventDefault(); this._press(); }, { passive: false });
+    this.deck.addEventListener('touchend', e => { e.preventDefault(); this._release(); }, { passive: false });
+    this.deck.addEventListener('mousedown', e => { if (e.button === 0) this._press(); });
+    document.addEventListener('mouseup', () => this._release());
+    this._render();
+  }
+  _render() {
+    this.deck.dataset.state = this.state;
+    const labels = { idle: 'برای شروع نگه دارید', inspection: 'بازرسی', hold: 'نگه دارید...', ready: 'آماده!', running: 'در حال حل...', stopped: 'متوقف' };
+    this.pill.textContent = labels[this.state] || this.state;
+  }
+  setInspection(on) { this.inspection = !!on; if (this.state !== 'idle' && this.state !== 'stopped') this.reset(); }
+  _keyDown(e) {
+    if (e.code === 'Escape') { this.reset(); return; }
+    if (e.code !== 'Space') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (this.isLocked()) return;
+    e.preventDefault(); if (e.repeat) return; this._press();
+  }
+  _keyUp(e) { if (e.code === 'Space' && !e.repeat) this._release(); }
+  _press() {
+    if (this.isLocked()) return;
+    if (this.state === 'running') { const el = performance.now() - this._t0; if (el < 120) return; this._finish(el); }
+    else if (['idle', 'stopped', 'inspection'].includes(this.state)) this._toHold();
+  }
+  _release() { if (this.state === 'hold' || this.state === 'ready') this._go(); }
+  _toHold() {
+    this.state = 'hold'; this._render(); this.digits.textContent = '0.00';
+    clearTimeout(this._holdT);
+    this._holdT = setTimeout(() => { if (this.state === 'hold') { this.state = 'ready'; this._render(); } }, 500);
+  }
+  _go() {
+    clearTimeout(this._holdT);
+    const inspMs = this._insp;
+    let forced = null;
+    if (this.inspection && inspMs > 15000) forced = inspMs > 17000 ? 'dnf' : '+2';
+    this._insp = 0;
+    if (forced === 'dnf') { this._finish(0, forced); return; }
+    this.state = 'running'; this._render(); this._t0 = performance.now(); this.onStart(); this._loop(); this._pendingForced = forced;
+  }
+  _finish(rawMs, forcedOverride) {
+    cancelAnimationFrame(this._raf);
+    const forced = forcedOverride || this._pendingForced || null;
+    this._pendingForced = null; this.state = 'stopped'; this._render();
+    this.digits.textContent = forced === 'dnf' ? 'DNF' : fmtMs(rawMs);
+    this.onFinish({ rawMs, forced }); this._insp = 0;
+  }
+  reset() { cancelAnimationFrame(this._raf); clearTimeout(this._holdT); this._pendingForced = null; this._insp = 0; this.state = 'idle'; this._render(); this.digits.textContent = '0.00'; }
+  _loop() {
+    cancelAnimationFrame(this._raf);
+    const step = () => {
+      if (this.state === 'running') { this.digits.textContent = fmtMs(performance.now() - this._t0); this._raf = requestAnimationFrame(step); }
+      else if (this.state === 'inspection') {
+        this._insp = performance.now() - this._i0; this.digits.textContent = String(Math.floor(this._insp / 1000));
+        if (this._insp >= 17000) { this._finish(0, 'dnf'); return; }
+        if (this._insp >= 15000 && this.pill.textContent !== 'بازرسی (+2)') this.pill.textContent = 'بازرسی (+2)';
+        this._raf = requestAnimationFrame(step);
+      }
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+};
 };

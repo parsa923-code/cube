@@ -1,45 +1,25 @@
-window.SB = (function () {
-  let client = null;
-  let user = null;
+// Supabase client + anonymous identity
+(function () {
+  const { createClient } = window.supabase;
 
-  function init() {
-    // بررسی وجود کتابخانه Supabase و تنظیمات
-    if (typeof supabase === 'undefined') {
-      console.warn('Supabase library not loaded. Multiplayer features will be disabled.');
-      return;
-    }
-    if (!window.APP_CONFIG || !window.APP_CONFIG.supabaseUrl || !window.APP_CONFIG.supabaseKey) {
-      console.warn('Supabase config is missing. Please update js/config.js');
-      return;
-    }
-    
-    // ایجاد کلاینت Supabase
-    client = supabase.createClient(window.APP_CONFIG.supabaseUrl, window.APP_CONFIG.supabaseKey);
-  }
+  const client = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
 
-  async function ensureAuth() {
-    if (!client) throw new Error('کلاینت Supabase مقداردهی نشده است. لطفاً فایل config.js را بررسی کنید.');
-    
-    // بررسی نشست فعال
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) {
-      // ورود ناشناس اگر نشستی وجود ندارد
-      const { data, error } = await client.auth.signInAnonymously();
-      if (error) throw new Error('خطا در ورود ناشناس: ' + error.message);
-      user = data.user;
-    } else {
-      user = session.user;
-    }
-    return user;
-  }
+  let cachedUid = null;
 
-  return {
-    init,
-    ensureAuth,
-    get uid() { return user ? user.id : null; },
-    get client() { return client; }
+  window.SB = {
+    client,
+    // Makes sure we have an (anonymous) authenticated user. Returns uid.
+    async ensureAuth() {
+      const { data, error: gErr } = await client.auth.getSession();
+      if (!gErr && data.session) { cachedUid = data.session.user.id; return cachedUid; }
+      const { data: sData, error } = await client.auth.signInAnonymously();
+      if (error) throw new Error('Auth failed: ' + error.message +
+        ' — Enable Anonymous Sign-Ins in Supabase (Auth → Providers).');
+      cachedUid = sData.user.id;
+      return cachedUid;
+    },
+    uid() { return cachedUid; }
   };
 })();
-
-// مقداردهی اولیه به محض لود شدن اسکریپت
-SB.init();

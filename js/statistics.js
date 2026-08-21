@@ -70,3 +70,45 @@
   
     window.Stats = { val, avgWindow, compute, progression, fmtAvg };
   })();
+
+          (function () {
+  const INF = Infinity;
+  function val(s) { return (s.penalty === 'dnf' || s.final_time == null) ? INF : s.final_time; }
+  
+  function avgWindow(vals) {
+    let dnf = 0;
+    for (const v of vals) if (v === INF) dnf++;
+    if (dnf >= 2) return INF;
+    const sorted = [...vals].sort((a, b) => a - b);
+    const mid = sorted.slice(1, sorted.length - 1);
+    return Math.round(mid.reduce((a, b) => a + b, 0) / mid.length);
+  }
+  
+  function currentAvg(solves, N) { return solves.length < N ? null : avgWindow(solves.slice(-N).map(val)); }
+  
+  function bestAvg(solves, N) {
+    if (solves.length < N) return null;
+    let best = null;
+    for (let i = 0; i + N <= solves.length; i++) {
+      const a = avgWindow(solves.slice(i, i + N).map(val));
+      if (a === INF) continue;
+      if (best === null || a < best) best = a;
+    }
+    return best === null ? INF : best;
+  }
+  
+  function fmtAvg(a) { return a == null ? 'ناموجود' : (a === INF ? 'DNF' : fmtMs(a)); }
+  
+  function compute(solves) {
+    const vals = solves.map(val);
+    const valid = vals.filter(v => v !== INF);
+    const mean = valid.length ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
+    return {
+      count: solves.length, dnf: solves.length - valid.length, mean,
+      best: valid.length ? Math.min(...valid) : null, worst: valid.length ? Math.max(...valid) : null,
+      ao5: currentAvg(solves, 5), ao12: currentAvg(solves, 12), ao25: currentAvg(solves, 25), ao50: currentAvg(solves, 50), ao100: currentAvg(solves, 100),
+      bao5: bestAvg(solves, 5), bao12: bestAvg(solves, 12), bao25: bestAvg(solves, 25), bao50: bestAvg(solves, 50), bao100: bestAvg(solves, 100)
+    };
+  }
+  window.Stats = { val, avgWindow, compute, fmtAvg };
+})();

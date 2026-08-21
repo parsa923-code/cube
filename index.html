@@ -1,141 +1,92 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>تایمر حرفه‌ای اسپیدکیوبینگ | کیوب‌مستر</title>
-  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CubeDuel — 1v1 Speedcubing Battles</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <header class="app-header">
+<body class="lobby-body">
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+  <header class="top">
     <div class="brand">
-      <span class="cubemark"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
-      <strong>کیوب‌مستر</strong>
+      <span class="cubemark" aria-hidden="true">
+        <i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i>
+      </span>
+      Cube<strong>Duel</strong>
     </div>
-    <nav class="main-nav">
-      <a href="index.html" class="nav-link active">تایمر</a>
-      <a href="lobby.html" class="nav-link">رقابت آنلاین</a>
-    </nav>
-    <div class="header-actions">
-      <button id="themeToggle" class="icon-btn" title="تغییر تم">🌓</button>
-    </div>
+    <span class="tag">1v1 · same scramble · realtime</span>
   </header>
 
-  <main class="timer-layout">
-    <aside class="sidebar">
-      <div class="panel session-panel">
-        <div class="panel-head">
-          <span>مدیریت جلسات</span>
-          <button id="btnNewSession" class="btn tiny primary">+ جدید</button>
-        </div>
-        <select id="sessionSelect" class="field-select"></select>
-        <div class="session-actions" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-          <button id="btnRenameSession" class="btn ghost tiny" style="flex:1">تغییر نام</button>
-          <button id="btnDeleteSession" class="btn ghost tiny danger" style="flex:1">حذف</button>
-        </div>
-      </div>
-
-      <div class="panel stats-panel">
-        <div class="panel-head">آمار جلسه</div>
-        <div class="stats-grid" id="statsGrid"></div>
-      </div>
-
-      <div class="panel io-panel">
-        <div class="panel-head">پشتیبان‌گیری داده‌ها</div>
-        <div class="io-actions" style="display:flex; flex-direction:column; gap:0.5rem;">
-          <button id="btnExport" class="btn ghost">خروجی JSON از این جلسه</button>
-          <label class="btn ghost" style="text-align:center; cursor:pointer;">
-            ورودی JSON (بازنشانی جلسه)
-            <input type="file" id="btnImport" accept=".json" hidden>
-          </label>
-        </div>
-      </div>
-    </aside>
-
-    <section class="timer-area">
-      <div class="controls-bar">
-        <select id="puzzleSelect" class="field-select" style="width:auto; min-width:120px;">
-          <option value="333">3x3x3</option>
-          <option value="222">2x2x2</option>
-          <option value="444">4x4x4</option>
-          <option value="555">5x5x5</option>
-          <option value="666">6x6x6</option>
-          <option value="777">7x7x7</option>
-          <option value="pyra">Pyraminx</option>
-          <option value="skewb">Skewb</option>
-        </select>
-        <button id="btnNewScramble" class="btn ghost tiny">اسکرامبل جدید</button>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkInspection">
-          <span>بازرسی (۱۵ ثانیه)</span>
-        </label>
-      </div>
-
-      <div class="scramble-box" id="scrambleBox">
-        <div class="scramble-text" id="scrambleText">در حال تولید...</div>
-        <button id="btnExpandScramble" class="btn text-btn hidden">نمایش بیشتر</button>
-      </div>
-
-      <div class="timer-display">
-        <div class="timer-deck" id="timerDeck">
-          <div class="timer-pill" id="timerPill">برای شروع نگه دارید</div>
-          <div class="timer-digits" id="timerDigits">0.00</div>
-        </div>
+  <main class="lobby">
+    <section class="pitch">
+      <h1 class="display">
+        Race a friend.<br>
+        <span class="outline">Same scramble.</span><br>
+        Zero mercy.
+      </h1>
+      <p class="lede">
+        Create a room, share a 6-character code and trade unlimited solves head-to-head —
+        live results, Ao5 / Ao12 / Ao50 / Ao100, +2 &amp; DNF handling, and WCA-style
+        scrambles for 3×3 and 2×2.
+      </p>
+      <div class="steps">
+        <div class="step"><b>01</b><span>Create a room &amp; copy the code</span></div>
+        <div class="step"><b>02</b><span>Your opponent joins from anywhere</span></div>
+        <div class="step"><b>03</b><span>Solve the same scramble — results sync live</span></div>
       </div>
     </section>
 
-    <aside class="solves-sidebar">
-      <div class="panel solves-panel">
-        <div class="panel-head">
-          <span>رکوردها</span>
-          <span class="muted" id="solveCount">۰ حل</span>
-        </div>
-        <div class="solves-list" id="solvesList"></div>
+    <section class="panel entry">
+      <div class="livechip">
+        <span class="dot on"></span>
+        <span class="lc-label">LIVE TIMER</span>
+        <span class="lc-time" id="demoTime">0.00</span>
       </div>
-    </aside>
+
+      <label class="field">Your name
+        <input id="inpName" maxlength="20" placeholder="e.g. Feliks" autocomplete="nickname">
+      </label>
+
+      <label class="field">Room code
+        <input id="inpCode" maxlength="8" placeholder="ABC123" autocomplete="off" spellcheck="false">
+      </label>
+
+      <div class="field">Cube type <small>(used when creating a room)</small>
+        <div class="seg cube-seg">
+          <label><input type="radio" name="cube" value="333" checked><span>3×3×3</span></label>
+          <label><input type="radio" name="cube" value="222"><span>2×2×2</span></label>
+        </div>
+      </div>
+
+      <button id="btnCreate" class="btn primary big">Create Room</button>
+      <button id="btnJoin" class="btn ghost big">Join Room</button>
+
+      <p class="err" id="errBox" role="alert"></p>
+      <p class="hint">Your name is saved in this browser. No signup — jump straight into the duel.</p>
+    </section>
   </main>
 
-  <div class="modal-overlay hidden" id="modalOv">
-    <div class="modal" role="dialog">
-      <div class="m-head">
-        <b id="mTitle">جزئیات حل</b>
-        <button class="icon-btn" id="mClose">✕</button>
-      </div>
-      <div class="m-hero">
-        <span class="m-time" id="mTime">—</span>
-        <span class="status-chip" id="mStatus">عادی</span>
-      </div>
-      <dl class="m-grid">
-        <div><dt>زمان اصلی</dt><dd id="mRaw">—</dd></div>
-        <div><dt>زمان نهایی</dt><dd id="mFinal">—</dd></div>
-        <div><dt>جریمه</dt><dd id="mPenalty">—</dd></div>
-        <div><dt>شماره حل</dt><dd id="mSolveNum">—</dd></div>
-        <div><dt>تاریخ</dt><dd id="mDate">—</dd></div>
-        <div><dt>ساعت</dt><dd id="mClock">—</dd></div>
-      </dl>
-      <div class="m-scramble">
-        <label>اسکرامبل</label>
-        <code id="mScramble"></code>
-      </div>
-      <div class="m-actions" id="mActions">
-        <div class="seg penalty-seg">
-          <button data-p="none">عادی</button>
-          <button data-p="+2">+2</button>
-          <button data-p="dnf">DNF</button>
-        </div>
-        <button class="btn danger" id="mDelete">حذف این حل</button>
-      </div>
-    </div>
-  </div>
+  <footer class="foot">
+    Static frontend · Supabase Realtime · WCA-style scrambles · works with thousands of solves
+  </footer>
 
   <div id="toasts"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
   <script src="js/util.js"></script>
   <script src="js/scramble.js"></script>
   <script src="js/statistics.js"></script>
-  <script src="js/timer.js"></script>
-  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

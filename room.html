@@ -1,165 +1,148 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>اتاق رقابت - کیوب‌مستر</title>
-  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .rbar { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-    .room-chip { background: var(--bg); padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 0.5rem; }
-    .cube-badge { background: var(--primary); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
-    .opp-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .dot.on { background: var(--success); } .dot.off { background: var(--text-muted); }
-    .grow { flex: 1; }
-    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
-    @media (max-width: 768px) { .grid-stats { grid-template-columns: 1fr; } }
-    .stat-card { padding: 1rem; }
-    .sc-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-    .sc-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .sc-dot.p1 { background: #3b82f6; } .sc-dot.p2 { background: #ef4444; }
-    .battle { width: 100%; border-collapse: collapse; }
-    .battle th, .battle td { padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border); }
-    .battle th { color: var(--text-muted); font-size: 0.875rem; }
-    .cell { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-variant-numeric: tabular-nums; min-width: 60px; }
-    .cell.ok { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-    .cell.plus { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-    .cell.dnf { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-    .cell.none { color: var(--text-muted); }
-    .cell.win { font-weight: 700; box-shadow: 0 0 0 1px var(--success); }
-    .tscroll { max-height: 400px; overflow-y: auto; }
-    .empty-note { text-align: center; color: var(--text-muted); padding: 2rem; }
-    .chart-panel { grid-column: 1 / -1; }
-    .legend { display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; }
-    .lg { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
-    .lg.p1 { background: #3b82f6; } .lg.p2 { background: #ef4444; }
-    .chat-box { margin-top: 1rem; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; height: 300px; display: flex; flex-direction: column; }
-    .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 0.5rem; }
-    .chat-input { display: flex; gap: 0.5rem; }
-    .chat-input input { flex: 1; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; }
-    .m-vs { text-align: center; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; }
-    .m-vs.good { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-    .m-vs.bad { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room — CubeDuel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <header class="app-header">
-    <div class="brand">
-      <span class="cubemark"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
-      <strong>کیوب‌مستر</strong>
+<body class="room-body">
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <header class="rbar">
+    <div class="brand small">
+      <span class="cubemark" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
+      Cube<strong>Duel</strong>
     </div>
-    <nav class="main-nav">
-      <a href="index.html" class="nav-link">تایمر</a>
-      <a href="lobby.html" class="nav-link active">رقابت آنلاین</a>
-    </nav>
-    <div class="header-actions">
-      <button id="themeToggle" class="icon-btn" title="تغییر تم">🌓</button>
+    <div class="room-chip">
+      ROOM <b id="roomCode">——————</b>
+      <button class="icon-btn" id="btnCopyCode" title="Copy room code">⧉</button>
     </div>
+    <span class="cube-badge" id="cubeBadge">3×3×3</span>
+    <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">waiting…</span></span>
+    <div class="grow"></div>
+    <button class="btn ghost tiny" id="btnLeave">Leave Room</button>
   </header>
 
-  <div id="loading" class="panel" style="margin: 1rem; text-align: center;">در حال اتصال به اتاق...</div>
+  <div class="overlay" id="loading">
+    <div class="cube-spin" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p>Entering room…</p>
+  </div>
 
-  <div id="errOv" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="m-head"><b>خطا</b></div>
-      <p id="errMsg" style="margin-bottom: 1rem; color: var(--danger);"></p>
-      <button id="errHome" class="btn primary">بازگشت به صفحه اصلی</button>
+  <div class="overlay hidden" id="errOv">
+    <div class="panel err-panel">
+      <h3>Can't enter this room</h3>
+      <p id="errMsg"></p>
+      <div class="btnrow">
+        <button class="btn primary" onclick="location.reload()">Retry</button>
+        <button class="btn ghost" id="errHome">Back to lobby</button>
+      </div>
     </div>
   </div>
 
-  <main id="roomMain" class="hidden" style="padding: 1rem; max-width: 1200px; margin: 0 auto;">
-    <header class="rbar">
-      <div class="room-chip">اتاق: <b id="roomCode">——————</b><button class="icon-btn" id="btnCopyCode" title="کپی کد اتاق">⧉</button></div>
-      <span class="cube-badge" id="cubeBadge">3×3×3</span>
-      <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">در انتظار...</span></span>
-      <div class="grow"></div>
-      <button class="btn ghost tiny" id="btnLeave">خروج از اتاق</button>
-    </header>
-
-    <section class="panel" style="margin-top: 1rem; text-align: center;">
-      <div class="scramble-box" style="margin: 0 auto 1rem auto;">
-        <div class="scramble-text expanded" id="scrambleText" style="max-height: none; font-size: 1.25rem;">در حال تولید...</div>
+  <main class="rmain">
+    <section class="grid-top">
+      <div class="panel scramble-panel">
+        <div class="panel-head">
+          <span class="round-badge" id="roundBadge">SOLVE 1 / ∞</span>
+          <div class="grow"></div>
+          <button class="btn ghost tiny" id="btnCopyScr">Copy scramble</button>
+        </div>
+        <div class="scramble" id="scrambleText">—</div>
+        <div class="scr-foot" id="lastLine">Last: —</div>
       </div>
-      <div class="timer-display">
-        <div class="timer-deck" id="timerDeck">
-          <div class="timer-pill" id="timerPill">آماده</div>
-          <div class="timer-digits" id="timerDigits">0.00</div>
+
+      <div class="panel timer-panel" id="timerDeck" data-state="idle">
+        <div class="pill" id="timerPill">IDLE</div>
+        <div class="digits" id="timerDigits">0.00</div>
+        <div class="solve-stamp" id="solveStamp"></div>
+        <div class="thint">Hold <kbd>SPACE</kbd> 0.5s → release to start · press to stop · <kbd>ESC</kbd> reset</div>
+        <div class="trow">
+          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
         </div>
       </div>
-      <div style="margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem;" id="solveStamp">راند #1</div>
-      <label class="checkbox-label" style="justify-content: center; margin-top: 1rem;">
-        <input type="checkbox" id="chkInspection"><span>بازرسی (۱۵ ثانیه)</span>
-      </label>
     </section>
 
-    <section class="panel table-panel" style="margin-top: 1rem;">
+    <section class="panel table-panel">
       <div class="panel-head">
-        <span class="ph-title">ثبت حل‌ها</span>
-        <span class="muted" id="solveCount">۰ حل</span>
+        <span class="ph-title">Battle log</span>
+        <span class="muted" id="solveCount">0 solves</span>
         <div class="grow"></div>
-        <button class="btn ghost tiny" id="btnCsv">خروجی CSV</button>
+        <button class="btn ghost tiny" id="btnCsv">Export CSV</button>
       </div>
       <div class="tscroll">
         <table class="battle">
-          <thead><tr><th class="c-n">#</th><th class="c-p p1"><span id="p1name">بازیکن ۱</span><small id="p1best"></small></th><th class="c-p p2"><span id="p2name">بازیکن ۲</span><small id="p2best"></small></th></tr></thead>
+          <thead>
+            <tr>
+              <th class="c-n">#</th>
+              <th class="c-p p1"><span id="p1name">Player 1</span><small id="p1best"></small></th>
+              <th class="c-p p2"><span id="p2name">Player 2</span><small id="p2best"></small></th>
+            </tr>
+          </thead>
           <tbody id="rowsBody"></tbody>
         </table>
       </div>
-      <div class="empty-note" id="emptyNote">هنوز حلی ثبت نشده است — تایمر را شروع کنید!</div>
+      <div class="empty-note" id="emptyNote">No solves yet — start the timer!</div>
     </section>
 
     <section class="grid-stats">
       <div class="panel stat-card sc-p1">
-        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">بازیکن ۱</b><span class="dot on" id="p1dot"></span></div>
+        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">Player 1</b><span class="dot on" id="p1dot"></span></div>
         <div class="sc-body" id="p1stats"></div>
       </div>
       <div class="panel stat-card sc-p2">
-        <div class="sc-head"><span class="sc-dot p2"></span><b id="p2name2">بازیکن ۲</b><span class="dot off" id="p2dot"></span></div>
+        <div class="sc-head"><span class="sc-dot p2"></span><b id="p2name2">Player 2</b><span class="dot off" id="p2dot"></span></div>
         <div class="sc-body" id="p2stats"></div>
       </div>
       <div class="panel chart-panel">
         <div class="panel-head">
-          <span class="ph-title">پیشرفت Ao5</span>
+          <span class="ph-title">Ao5 progression</span>
           <div class="grow"></div>
-          <span class="legend"><i class="lg p1"></i><span id="lg1">بازیکن ۱</span><i class="lg p2"></i><span id="lg2">بازیکن ۲</span></span>
+          <span class="legend"><i class="lg p1"></i><span id="lg1">P1</span><i class="lg p2"></i><span id="lg2">P2</span></span>
         </div>
         <canvas id="chart" height="220"></canvas>
       </div>
     </section>
-    
-    <section class="chat-box">
-      <div class="panel-head">گفتگو</div>
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="پیام خود را بنویسید..." maxlength="200">
-        <button class="btn primary" id="btnSendChat">ارسال</button>
+
+    <section class="panel chat-panel">
+      <div class="panel-head">
+        <span class="ph-title">Room Chat</span>
+        <div class="grow"></div>
+        <span class="chat-status" id="chatStatus"></span>
+      </div>
+      <div class="chat-scroll" id="chatScroll"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Type a message… (Enter to send)" maxlength="500" rows="1"></textarea>
+        <button class="btn primary" id="chatSend">Send</button>
       </div>
     </section>
   </main>
 
   <div class="modal-overlay hidden" id="modalOv">
     <div class="modal" role="dialog" aria-modal="true">
-      <div class="m-head"><b id="mTitle">جزئیات حل</b><button class="icon-btn" id="mClose">✕</button></div>
-      <div class="m-hero"><span class="m-time" id="mTime">—</span><span class="status-chip" id="mStatus">عادی</span></div>
+      <div class="m-head"><b id="mTitle">Solve #1</b><button class="icon-btn" id="mClose">✕</button></div>
+      <div class="m-hero"><span class="m-time" id="mTime">—</span><span class="status-chip" id="mStatus">Normal</span></div>
       <dl class="m-grid">
-        <div><dt>زمان اصلی</dt><dd id="mRaw">—</dd></div>
-        <div><dt>زمان نهایی</dt><dd id="mFinal">—</dd></div>
-        <div><dt>بازیکن</dt><dd id="mPlayer">—</dd></div>
-        <div><dt>مکعب</dt><dd id="mCube">—</dd></div>
-        <div><dt>تاریخ</dt><dd id="mDate">—</dd></div>
-        <div><dt>ساعت دقیق</dt><dd id="mClock">—</dd></div>
+        <div><dt>Raw time</dt><dd id="mRaw">—</dd></div>
+        <div><dt>Final time</dt><dd id="mFinal">—</dd></div>
+        <div><dt>Player</dt><dd id="mPlayer">—</dd></div>
+        <div><dt>Cube</dt><dd id="mCube">—</dd></div>
+        <div><dt>Date</dt><dd id="mDate">—</dd></div>
+        <div><dt>Exact time</dt><dd id="mClock">—</dd></div>
       </dl>
       <div class="m-vs" id="mVs"></div>
-      <div class="m-scramble"><label>اسکرامبل</label><code id="mScramble"></code></div>
+      <div class="m-scramble"><label>Scramble</label><code id="mScramble"></code></div>
       <div class="m-actions hidden" id="mActions">
         <div class="seg penalty-seg">
-          <button data-p="none">عادی</button>
+          <button data-p="none">Normal</button>
           <button data-p="+2">+2</button>
           <button data-p="dnf">DNF</button>
         </div>
-        <button class="btn danger" id="mDelete">حذف حل</button>
+        <button class="btn danger" id="mDelete">Delete solve</button>
       </div>
     </div>
   </div>
@@ -172,17 +155,10 @@
   <script src="js/util.js"></script>
   <script src="js/scramble.js"></script>
   <script src="js/statistics.js"></script>
-  <script src="js/timer.js"></script>
   <script src="js/api.js"></script>
   <script src="js/chart.js"></script>
+  <script src="js/timer.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/room.js"></script>
-  <script>
-    document.getElementById('themeToggle').addEventListener('click', () => {
-      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next); localStorage.setItem('theme', next);
-    });
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
-  </script>
 </body>
 </html>

@@ -115,14 +115,6 @@
     if (error) throw friendly(error);
   }
 
-  window.API = {
-    genCode, computeFinal,
-    findRoom, createRoom, deleteRoom,
-    getPlayers, addPlayer, removePlayer, leaveRoomCleanup,
-    getScrambles, addScramble,
-    getSolves, insertSolve, updateSolvePenalty, deleteSolve
-  };
-})();
 window.API = (function() {
   const client = () => SB.client;
   async function createRoom(hostName, cubeType) {
@@ -190,4 +182,6 @@ window.API = (function() {
     return rawMs;
   }
   return { createRoom, joinRoom, addPlayer, getPlayers, findRoom, getScrambles, addScramble, getSolves, insertSolve, updateSolvePenalty, deleteSolve, removePlayer, leaveRoomCleanup, computeFinal };
+
+
 })();

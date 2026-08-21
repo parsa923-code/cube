@@ -1,64 +1,95 @@
-// Tiny dependency-free canvas line chart for Ao5 progression
-(function () {
-    window.Chart = {
-      draw(canvas, seriesList) {
-        const dpr = window.devicePixelRatio || 1;
-        const w = canvas.clientWidth || 600;
-        const h = canvas.clientHeight || 220;
-        canvas.width = w * dpr; canvas.height = h * dpr;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, w, h);
-  
-        const pts = seriesList.flatMap(s => s.points).filter(p => p.y != null && isFinite(p.y));
-        if (!pts.length) {
-          ctx.fillStyle = '#5c7089';
-          ctx.font = '13px "IBM Plex Sans", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('No Ao5 data yet — complete at least 5 solves', w / 2, h / 2);
-          return;
+window.Chart = (function () {
+  function draw(canvas, series) {
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    // تنظیم ابعاد واقعی کانواس برای کیفیت بالا
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const padding = 30;
+    const w = rect.width - padding * 2;
+    const h = rect.height - padding * 2;
+
+    // یافتن محدوده مقادیر Y (زمان) و X (شماره حل)
+    let minY = Infinity, maxY = -Infinity;
+    let minX = Infinity, maxX = -Infinity;
+
+    series.forEach(s => {
+      s.points.forEach(p => {
+        if (isFinite(p.y)) {
+          if (p.y < minY) minY = p.y;
+          if (p.y > maxY) maxY = p.y;
         }
-        const padL = 48, padR = 14, padT = 14, padB = 24;
-        const xs = pts.map(p => p.x);
-        const minX = Math.min(...xs), maxX = Math.max(...xs);
-        let minY = Math.min(...pts.map(p => p.y)), maxY = Math.max(...pts.map(p => p.y));
-        if (minY === maxY) { minY -= 1000; maxY += 1000; }
-        const X = x => maxX === minX ? padL + (w - padL - padR) / 2
-          : padL + (x - minX) / (maxX - minX) * (w - padL - padR);
-        const Y = y => padT + (1 - (y - minY) / (maxY - minY)) * (h - padT - padB);
-  
-        ctx.font = '10px "JetBrains Mono", monospace';
-        ctx.textAlign = 'right';
-        for (let i = 0; i <= 4; i++) {
-          const y = padT + i / 4 * (h - padT - padB);
-          const val = maxY - i / 4 * (maxY - minY);
-          ctx.strokeStyle = 'rgba(39,57,82,.5)';
-          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
-          ctx.fillStyle = '#5c7089';
-          ctx.fillText((val / 1000).toFixed(1) + 's', padL - 6, y + 3);
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+      });
+    });
+
+    // اگر داده‌ای وجود نداشت یا همه DNF بودند، مقادیر پیش‌فرض
+    if (minY === Infinity) { minY = 0; maxY = 10000; }
+    if (minX === Infinity) { minX = 1; maxX = 10; }
+
+    const rangeY = maxY - minY || 10000;
+    minY = Math.max(0, minY - rangeY * 0.1); // 10% فضای خالی در پایین
+    maxY = maxY + rangeY * 0.1;              // 10% فضای خالی در بالا
+    
+    const rangeX = maxX - minX || 1;
+
+    // توابع تبدیل مختصات داده به مختصات کانواس
+    const getX = x => padding + ((x - minX) / rangeX) * w;
+    const getY = y => padding + h - ((y - minY) / (maxY - minY)) * h;
+
+    // خواندن رنگ‌ها از متغیرهای CSS برای سازگاری با تم تاریک/روشن
+    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#333';
+
+    // رسم خطوط شبکه (Grid)
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (h / 4) * i;
+      ctx.moveTo(padding, y);
+      ctx.lineTo(padding + w, y);
+    }
+    ctx.stroke();
+
+    // رسم خطوط و نقاط هر سری داده
+    series.forEach(s => {
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      
+      let started = false;
+      s.points.forEach(p => {
+        if (!isFinite(p.y)) return; // رد کردن DNFها در رسم خط
+        const x = getX(p.x);
+        const y = getY(p.y);
+        if (!started) {
+          ctx.moveTo(x, y);
+          started = true;
+        } else {
+          ctx.lineTo(x, y);
         }
-        ctx.textAlign = 'left';
-        ctx.fillText('#' + minX, padL, h - 8);
-        ctx.textAlign = 'right';
-        ctx.fillText('#' + maxX, w - padR, h - 8);
-  
-        for (const s of seriesList) {
-          ctx.strokeStyle = s.color; ctx.lineWidth = 2;
-          ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-          ctx.beginPath();
-          let pen = false, last = null;
-          for (const p of s.points) {
-            if (p.y == null || !isFinite(p.y)) { pen = false; continue; }
-            const x = X(p.x), y = Y(p.y);
-            if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
-            last = { x, y };
-          }
-          ctx.stroke();
-          if (last) {
-            ctx.fillStyle = s.color;
-            ctx.beginPath(); ctx.arc(last.x, last.y, 3, 0, Math.PI * 2); ctx.fill();
-          }
-        }
-      }
-    };
-  })();
+      });
+      ctx.stroke();
+
+      // رسم نقاط داده
+      ctx.fillStyle = s.color;
+      s.points.forEach(p => {
+        if (!isFinite(p.y)) return;
+        ctx.beginPath();
+        ctx.arc(getX(p.x), getY(p.y), 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+  }
+
+  return { draw };
+})();

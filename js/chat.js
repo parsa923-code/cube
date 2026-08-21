@@ -150,5 +150,24 @@
     if (els.status) els.status.textContent = txt;
   }
 
-  window.Chat = { init, setOpponentName, onRealtimeInsert, onRealtimeDelete };
+  window.Chat = (function() {
+  let roomId = null, myId = null, myName = '', oppName = 'حریف';
+  function init(cfg) { roomId = cfg.roomId; myId = cfg.myId; myName = cfg.myName; oppName = cfg.oppName || 'حریف'; }
+  function setOpponentName(name) { oppName = name; }
+  function appendMessage(m) {
+    const box = document.getElementById('chatMessages'); if (!box) return;
+    const div = document.createElement('div'); div.style.marginBottom = '0.5rem'; div.style.fontSize = '0.875rem';
+    const isMe = m.sender_id === myId;
+    div.innerHTML = `<b style="color: ${isMe ? 'var(--primary)' : 'var(--warning)'}">${isMe ? myName : oppName}:</b> <span style="color: var(--text)">${m.text}</span>`;
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
+  }
+  async function sendMessage(text) {
+    if (!text.trim() || !roomId) return;
+    try {
+      await SB.client.from('messages').insert({ room_id: roomId, sender_id: myId, text: text.trim(), created_at: new Date().toISOString() });
+      document.getElementById('chatInput').value = '';
+    } catch { toast('خطا در ارسال پیام', 'err'); }
+  }
+  return { init, setOpponentName, sendMessage, onRealtimeInsert: appendMessage, onRealtimeDelete: () => {} };
+})();
 })();

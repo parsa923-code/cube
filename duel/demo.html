@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo Battle — CubeDuel</title>
+<meta name="description" content="Try CubeDuel offline against a practice bot — no account, no server, runs entirely in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="../css/timer.css">
+</head>
+<body>
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <nav class="site-nav" style="position:relative;z-index:40">
+    <div class="nav-brand">
+      <span class="mark">🧊</span>
+      <span>Cube<strong style="color:var(--acc)">Timer</strong></span>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="../index.html">Timer</a>
+      <a class="nav-link active" href="index.html">Online Battle</a>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="btnTheme" title="Toggle theme">☀️</button>
+    </div>
+  </nav>
+
+  <header class="rbar">
+    <div class="brand small">
+      <span class="cubemark" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
+      Cube<strong>Duel</strong>
+    </div>
+    <div class="room-chip">Demo Battle <b>· offline, no account needed</b></div>
+    <span class="cube-badge" id="cubeBadge">3×3×3</span>
+    <div class="grow"></div>
+    <a class="btn ghost tiny" href="index.html">Exit Demo</a>
+  </header>
+
+  <main class="rmain">
+    <p class="hint" style="margin:2px 4px 0">
+      This is a local practice mode — it does not use the server, so nothing here is shared with anyone.
+      Want to race a real person? <a href="index.html">Create or join an Online Battle room</a>.
+    </p>
+
+    <section class="grid-top">
+      <div class="panel scramble-panel">
+        <div class="panel-head">
+          <span class="round-badge" id="roundBadge">Solve 1 / ∞</span>
+          <div class="grow"></div>
+          <button class="btn ghost tiny" id="btnCopyScr">Copy Scramble</button>
+        </div>
+        <div class="scramble" id="scrambleText">—</div>
+        <div class="scr-foot" id="lastLine">Last: —</div>
+      </div>
+
+      <div class="panel timer-panel" id="timerDeck" data-state="idle">
+        <div class="pill" id="timerPill">IDLE</div>
+        <div class="digits" id="timerDigits">0.00</div>
+        <div class="solve-stamp" id="solveStamp"></div>
+        <div class="thint">Hold <kbd>SPACE</kbd> / touch 0.5s → release to start · press/tap to stop · <kbd>ESC</kbd> to reset</div>
+        <div class="trow">
+          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <span class="ph-title">Battle Log</span>
+        <span class="muted" id="solveCount">0 solves</span>
+        <div class="grow"></div>
+        <button class="btn ghost tiny" id="btnCsv">Export CSV</button>
+      </div>
+      <div class="tscroll">
+        <table class="battle">
+          <thead>
+            <tr>
+              <th class="c-n">#</th>
+              <th class="c-p p1"><span id="p1name">You</span><small id="p1best"></small></th>
+              <th class="c-p p2"><span id="p2name">Practice Bot</span><small id="p2best"></small></th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-note" id="emptyNote">No solves yet — start the timer!</div>
+    </section>
+
+    <section class="grid-stats" style="grid-template-columns:repeat(2,1fr)">
+      <div class="panel stat-card sc-p1">
+        <div class="sc-head"><span class="sc-dot p1"></span><b>You</b></div>
+        <div class="sc-body" id="p1stats"></div>
+      </div>
+      <div class="panel stat-card sc-p2">
+        <div class="sc-head"><span class="sc-dot p2"></span><b>Practice Bot</b></div>
+        <div class="sc-body" id="p2stats"></div>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head">
+          <span class="ph-title">Ao5 Trend</span>
+          <div class="grow"></div>
+          <span class="legend"><i class="lg p1"></i><span>You</span><i class="lg p2"></i><span>Bot</span></span>
+        </div>
+        <canvas id="chart" height="220"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <div id="toasts"></div>
+
+  <script src="../shared/utils.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Battle — CubeDuel</title>
+<meta name="description" content="Race up to 5 friends head-to-head on an identical scramble, live — CubeDuel is a real-time speedcubing timer.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="../css/timer.css">
+</head>
+<body>
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <nav class="site-nav">
+    <div class="nav-brand">
+      <span class="mark">🧊</span>
+      <span>Cube<strong style="color:var(--acc)">Timer</strong></span>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="../index.html">Timer</a>
+      <a class="nav-link active" href="index.html">Online Battle</a>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="btnTheme" title="Toggle theme">☀️</button>
+    </div>
+  </nav>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+  <header class="top">
+    <div class="brand">
+      <span class="cubemark" aria-hidden="true">
+        <i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i>
+      </span>
+      Cube<strong>Duel</strong>
+    </div>
+    <span class="tag">up to 5 players · same scramble · real-time</span>
+  </header>
+
+  <main class="lobby">
+    <section class="pitch">
+      <h1 class="display">
+        Race your friend.<br>
+        <span class="outline">Same scramble.</span><br>
+        No mercy.
+      </h1>
+      <p class="lede">
+        Create a room, send the 6-character code, and go solve-for-solve with no limits —
+        live results, Ao5 / Ao12 / Ao50 / Ao100, +2 and DNF penalties, and WCA-style scrambles for 3×3 and 2×2.
+      </p>
+      <div class="steps">
+        <div class="step"><b>01</b><span>Create a room and copy the code</span></div>
+        <div class="step"><b>02</b><span>Up to 4 friends join from anywhere</span></div>
+        <div class="step"><b>03</b><span>Solve the same scramble — results live</span></div>
+      </div>
+    </section>
+
+    <section class="panel entry">
+      <div class="livechip">
+        <span class="dot on"></span>
+        <span class="lc-label">Live timer</span>
+        <span class="lc-time" id="demoTime">0.00</span>
+      </div>
+
+      <label class="field">Your name
+        <input id="inpName" maxlength="20" placeholder="e.g. Felix" autocomplete="nickname">
+      </label>
+
+      <label class="field">Room code
+        <input id="inpCode" maxlength="8" placeholder="ABC123" autocomplete="off" spellcheck="false">
+      </label>
+
+      <div class="field">Cube type <small>(when creating a room)</small>
+        <div class="seg cube-seg">
+          <label><input type="radio" name="cube" value="333" checked><span>3×3×3</span></label>
+          <label><input type="radio" name="cube" value="222"><span>2×2×2</span></label>
+        </div>
+      </div>
+
+      <button id="btnCreate" class="btn primary big">Create Room</button>
+      <button id="btnJoin" class="btn ghost big">Join Room</button>
+
+      <p class="err" id="errBox" role="alert"></p>
+      <p class="hint">Your name is saved in this browser. No sign-up — jump straight into a duel.</p>
+      <p class="hint">
+        Online Battle needs a live connection to our server.
+        <a href="demo.html" id="lnkDemo">Try a Demo Battle instead</a> — runs entirely in your browser, no account or connection required.
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Static frontend · Supabase Realtime · WCA-style scrambles · built for thousands of solves
+  </footer>
+
+  <div id="toasts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

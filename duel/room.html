@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room — CubeDuel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="../css/timer.css">
+</head>
+<body>
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <nav class="site-nav" style="position:relative;z-index:40">
+    <div class="nav-brand">
+      <span class="mark">🧊</span>
+      <span>Cube<strong style="color:var(--acc)">Timer</strong></span>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="../index.html">Timer</a>
+      <a class="nav-link active" href="index.html">Online Battle</a>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="btnTheme" title="Toggle theme">☀️</button>
+    </div>
+  </nav>
+
+  <header class="rbar">
+    <div class="brand small">
+      <span class="cubemark" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></span>
+      Cube<strong>Duel</strong>
+    </div>
+    <div class="room-chip">
+      Room <b id="roomCode">——————</b>
+      <button class="icon-btn" id="btnCopyCode" title="Copy room code">⧉</button>
+    </div>
+    <span class="cube-badge" id="cubeBadge">3×3×3</span>
+    <span class="opp-status"><span class="dot off" id="oppDot"></span><span id="oppStatus">Waiting…</span></span>
+    <div class="grow"></div>
+    <button class="btn ghost tiny" id="btnLeave">Leave Room</button>
+  </header>
+
+  <div class="overlay" id="loading">
+    <div class="cube-spin" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p id="loadingMsg">Checking connection…</p>
+  </div>
+
+  <div class="overlay hidden" id="errOv">
+    <div class="panel err-panel">
+      <h3>Can't join this room</h3>
+      <p id="errMsg"></p>
+      <div class="btnrow">
+        <button class="btn primary" onclick="location.reload()">Try Again</button>
+        <button class="btn ghost" id="errHome">Back to Lobby</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="rmain">
+    <section class="grid-top">
+      <div class="panel scramble-panel">
+        <div class="panel-head">
+          <span class="round-badge" id="roundBadge">Solve 1 / ∞</span>
+          <div class="grow"></div>
+          <button class="btn ghost tiny" id="btnCopyScr">Copy Scramble</button>
+        </div>
+        <div class="scramble" id="scrambleText">—</div>
+        <div class="scr-foot" id="lastLine">Last: —</div>
+      </div>
+
+      <div class="panel timer-panel" id="timerDeck" data-state="idle">
+        <div class="pill" id="timerPill">IDLE</div>
+        <div class="digits" id="timerDigits">0.00</div>
+        <div class="solve-stamp" id="solveStamp"></div>
+        <div class="thint">Hold <kbd>SPACE</kbd> / touch 0.5s → release to start · press/tap to stop · <kbd>ESC</kbd> to reset</div>
+        <div class="trow">
+          <label class="switch"><input type="checkbox" id="chkInspection"><span>Inspection (15s)</span></label>
+          <div class="grow"></div>
+          <button class="btn ghost tiny hidden" id="btnResolve" title="Discard your time and solve this round again">Re-solve this round</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel chat-panel">
+      <div class="panel-head">
+        <span class="ph-title">Room Chat</span>
+        <div class="grow"></div>
+        <span class="chat-status" id="chatStatus"></span>
+      </div>
+      <div class="chat-scroll" id="chatScroll"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Write a message… (Enter to send)" maxlength="500" rows="1"></textarea>
+        <button class="btn primary" id="chatSend">Send</button>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <span class="ph-title">Battle Log</span>
+        <span class="muted" id="solveCount">0 solves</span>
+        <div class="grow"></div>
+        <button class="btn ghost tiny hidden" id="btnForceRound" title="Host only: create the next round even if not everyone has solved">Force Next Round</button>
+        <button class="btn ghost tiny" id="btnCsv">Export CSV</button>
+      </div>
+      <div class="tscroll">
+        <table class="battle">
+          <thead>
+            <tr>
+              <th class="c-n">#</th>
+              <th class="c-p p1"><span id="p1name">Player 1</span><small id="p1best"></small></th>
+              <th class="c-p p2"><span id="p2name">Player 2</span><small id="p2best"></small></th>
+              <th class="c-p p3"><span id="p3name">Player 3</span><small id="p3best"></small></th>
+              <th class="c-p p4"><span id="p4name">Player 4</span><small id="p4best"></small></th>
+              <th class="c-p p5"><span id="p5name">Player 5</span><small id="p5best"></small></th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-note" id="emptyNote">No solves yet — start the timer!</div>
+    </section>
+
+    <section class="grid-stats">
+      <div class="panel stat-card sc-p1">
+        <div class="sc-head"><span class="sc-dot p1"></span><b id="p1name2">Player 1</b><span class="dot on" id="p1dot"></span></div>
+        <div class="sc-body" id="p1stats"></div>
+      </div>
+      <div class="panel stat-card sc-p2">
+        <div class="sc-head"><span class="sc-dot p2"></span><b id="p2name2">Player 2</b><span class="dot off" id="p2dot"></span></div>
+        <div class="sc-body" id="p2stats"></div>
+      </div>
+      <div class="panel stat-card sc-p3">
+        <div class="sc-head"><span class="sc-dot p3"></span><b id="p3name2">Player 3</b><span class="dot off" id="p3dot"></span></div>
+        <div class="sc-body" id="p3stats"></div>
+      </div>
+      <div class="panel stat-card sc-p4">
+        <div class="sc-head"><span class="sc-dot p4"></span><b id="p4name2">Player 4</b><span class="dot off" id="p4dot"></span></div>
+        <div class="sc-body" id="p4stats"></div>
+      </div>
+      <div class="panel stat-card sc-p5">
+        <div class="sc-head"><span class="sc-dot p5"></span><b id="p5name2">Player 5</b><span class="dot off" id="p5dot"></span></div>
+        <div class="sc-body" id="p5stats"></div>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head">
+          <span class="ph-title">Ao5 Trend</span>
+          <div class="grow"></div>
+          <span class="legend">
+            <i class="lg p1"></i><span id="lg1">P1</span>
+            <i class="lg p2"></i><span id="lg2">P2</span>
+            <i class="lg p3"></i><span id="lg3">P3</span>
+            <i class="lg p4"></i><span id="lg4">P4</span>
+            <i class="lg p5"></i><span id="lg5">P5</span>
+          </span>
+        </div>
+        <canvas id="chart" height="220"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay hidden" id="modalOv">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="m-head"><b id="mTitle">Solve #1</b><button class="icon-btn" id="mClose">✕</button></div>
+      <div class="m-hero"><span class="m-time" id="mTime">—</span><span class="status-chip" id="mStatus">Normal</span></div>
+      <dl class="m-grid">
+        <div><dt>Raw Time</dt><dd id="mRaw">—</dd></div>
+        <div><dt>Final Time</dt><dd id="mFinal">—</dd></div>
+        <div><dt>Player</dt><dd id="mPlayer">—</dd></div>
+        <div><dt>Cube</dt><dd id="mCube">—</dd></div>
+        <div><dt>Date</dt><dd id="mDate">—</dd></div>
+        <div><dt>Exact Time</dt><dd id="mClock">—</dd></div>
+      </dl>
+      <div class="m-vs" id="mVs"></div>
+      <div class="m-scramble"><label>Scramble</label><code id="mScramble"></code></div>
+      <div class="m-actions hidden" id="mActions">
+        <div class="seg penalty-seg">
+          <button data-p="none">Normal</button>
+          <button data-p="+2">+2</button>
+          <button data-p="dnf">DNF</button>
+        </div>
+        <button class="btn danger" id="mDelete">Delete Solve</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/room.js"></script>
+</body>
+</html>

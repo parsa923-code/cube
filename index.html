@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CubeTimer — Speedcube Timer</title>
+<meta name="description" content="A fast, keyboard-driven speedcubing timer with sessions, WCA-style averages (Ao5/Ao12/Ao50/Ao100), scramble generation, and an Ao5 trend chart.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/timer.css">
+</head>
+<body>
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <nav class="site-nav">
+    <div class="nav-brand">
+      <span class="mark">🧊</span>
+      <span>Cube<strong style="color:var(--acc)">Timer</strong></span>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html">Timer</a>
+      <a class="nav-link" href="duel/index.html">Online Battle</a>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="btnTheme" title="Toggle theme">☀️</button>
+    </div>
+  </nav>
+
+  <div class="timer-layout">
+    <!-- SIDE: Puzzle + Sessions -->
+    <aside class="side-panel">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Puzzle Type</span>
+        </div>
+        <div class="puzzle-grid">
+          <button class="puzzle-btn active" data-p="333">3×3</button>
+          <button class="puzzle-btn" data-p="222">2×2</button>
+          <button class="puzzle-btn" data-p="444">4×4</button>
+          <button class="puzzle-btn" data-p="555">5×5</button>
+          <button class="puzzle-btn" data-p="666">6×6</button>
+          <button class="puzzle-btn" data-p="777">7×7</button>
+          <button class="puzzle-btn" data-p="pyram">Pyra</button>
+          <button class="puzzle-btn" data-p="skewb">Skewb</button>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <div class="panel-head">
+          <span class="panel-title">Sessions</span>
+        </div>
+        <div class="session-list" id="sessionList"></div>
+        <div class="side-actions">
+          <button class="btn primary sm" id="btnNewSession">+ Session</button>
+          <button class="btn ghost sm" id="btnImport">Import</button>
+          <button class="btn ghost sm" id="btnExport">Export JSON</button>
+          <button class="btn ghost sm" id="btnExportCsv">Export CSV</button>
+          <button class="btn danger sm" id="btnClearSolves">Clear Solves</button>
+        </div>
+        <input type="file" id="fileImport" class="file-hidden" accept=".json,application/json">
+      </div>
+    </aside>
+
+    <!-- CENTER: Scramble + Timer + Times -->
+    <main class="center-panel">
+      <section class="panel scramble-card">
+        <div class="panel-head" style="justify-content:center">
+          <span class="panel-title">Scramble</span>
+        </div>
+        <div class="scramble-text" id="scrambleText">—</div>
+        <button class="scramble-toggle" id="scrToggle">Show more</button>
+        <div class="scramble-actions">
+          <button class="btn ghost sm" id="btnNewScr">New Scramble</button>
+          <button class="btn ghost sm" id="btnCopyScr">Copy Scramble</button>
+        </div>
+      </section>
+
+      <section class="panel timer-card" id="timerDeck" data-state="idle">
+        <div class="timer-pill" id="timerPill">Ready</div>
+        <div class="timer-digits" id="timerDigits">0.00</div>
+        <div class="timer-hint">
+          Hold <kbd>Space</kbd> / touch 0.5s → release to start · press/tap to stop · <kbd>Esc</kbd> to reset
+        </div>
+        <div class="timer-opts">
+          <label class="switch">
+            <input type="checkbox" id="chkInspection">
+            <span>15s inspection</span>
+          </label>
+        </div>
+        <div class="manual-row">
+          <input id="manualInput" placeholder="Manual time (12.34)" inputmode="decimal" autocomplete="off">
+          <button class="btn primary sm" id="btnManual">Log</button>
+        </div>
+      </section>
+
+      <section class="panel times-card">
+        <div class="panel-head">
+          <span class="panel-title">Solve List</span>
+        </div>
+        <div class="times-scroll">
+          <table class="times-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="timesBody"></tbody>
+          </table>
+          <div class="times-empty" id="timesEmpty">No solves yet — start the timer!</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- STATS -->
+    <aside class="stats-panel">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Session Stats</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="label">Solves</div>
+            <div class="value" id="stCount">0</div>
+          </div>
+          <div class="stat-box hl">
+            <div class="label">Best</div>
+            <div class="value" id="stBest">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Worst</div>
+            <div class="value" id="stWorst">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Mean</div>
+            <div class="value" id="stMean">—</div>
+          </div>
+        </div>
+        <div class="stat-section-title">Current Averages</div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="label">Ao5</div><div class="value" id="stAo5">—</div></div>
+          <div class="stat-box"><div class="label">Ao12</div><div class="value" id="stAo12">—</div></div>
+          <div class="stat-box"><div class="label">Ao25</div><div class="value" id="stAo25">—</div></div>
+          <div class="stat-box"><div class="label">Ao50</div><div class="value" id="stAo50">—</div></div>
+          <div class="stat-box"><div class="label">Ao100</div><div class="value" id="stAo100">—</div></div>
+        </div>
+        <div class="stat-section-title">Best Averages</div>
+        <div class="stat-grid">
+          <div class="stat-box hl"><div class="label">Best Ao5</div><div class="value" id="stBAo5">—</div></div>
+          <div class="stat-box hl"><div class="label">Best Ao12</div><div class="value" id="stBAo12">—</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Ao5 Trend</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="aoChart"></canvas>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Solve detail modal -->
+  <div class="modal-ov hidden" id="modalOv">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3 id="mTitle">Solve</h3>
+        <button class="icon-btn" id="mClose" style="width:32px;height:32px">✕</button>
+      </div>
+      <div class="modal-hero">
+        <span class="modal-time" id="mTime">—</span>
+        <span class="chip ok" id="mChip">Normal</span>
+      </div>
+      <dl class="modal-grid">
+        <div><dt>Raw Time</dt><dd id="mRaw">—</dd></div>
+        <div><dt>Final Time</dt><dd id="mFinal">—</dd></div>
+        <div><dt>Puzzle</dt><dd id="mPuzzle">—</dd></div>
+        <div><dt>Date</dt><dd id="mDate">—</dd></div>
+        <div><dt>Time of Day</dt><dd id="mClock">—</dd></div>
+      </dl>
+      <div class="modal-scramble">
+        <label>Scramble</label>
+        <code id="mScramble"></code>
+      </div>
+      <div class="modal-actions">
+        <div class="penalty-seg">
+          <button data-p="none" class="active ok">Normal</button>
+          <button data-p="+2">+2</button>
+          <button data-p="dnf">DNF</button>
+        </div>
+        <button class="btn danger sm" id="mDelete">Delete Solve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt modal -->
+  <div class="modal-ov hidden" id="promptOv">
+    <div class="modal" style="width:min(380px,100%)">
+      <div class="modal-head"><h3 id="promptTitle">Name</h3></div>
+      <div class="prompt-body">
+        <input id="promptInput" maxlength="40" autocomplete="off">
+        <div class="prompt-btns">
+          <button class="btn ghost" id="promptCancel">Cancel</button>
+          <button class="btn primary" id="promptOk">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script src="shared/utils.js"></script>
+  <script src="js/scramble-gen.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/cube-timer.js"></script>
+  <script src="js/timer-app.js"></script>
+</body>
+</html>
